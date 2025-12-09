@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Ion Drift Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Plotly CDN -->
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <style>
+    :root {
+      --bg: #f1f5f9;
+      --card-bg: #ffffff;
+      --primary: #1d4ed8;
+      --primary-soft: #dbeafe;
+      --accent: #0f172a;
+      --text: #0f172a;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: radial-gradient(circle at top, #e0f2fe 0, #f1f5f9 40%, #f9fafb 100%);
+      color: var(--text);
+    }
+
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 16px 48px;
+    }
+
+    .header {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .title {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .subtitle {
+      color: var(--muted);
+      max-width: 620px;
+      font-size: 14px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr);
+      gap: 20px;
+      margin-top: 16px;
+    }
+
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 16px 18px 18px;
+      box-shadow:
+        0 12px 30px rgba(15, 23, 42, 0.08),
+        0 1px 3px rgba(15, 23, 42, 0.08);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .card-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 140px;
+      resize: vertical;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      font-size: 13px;
+      line-height: 1.45;
+      background: #f9fafb;
+    }
+
+    textarea:focus {
+      outline: 2px solid var(--primary-soft);
+      border-color: var(--primary);
+      background: #ffffff;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .button {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.06s ease, box-shadow 0.1s ease, background 0.1s;
+    }
+
+    .button-primary {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 10px 20px rgba(37, 99, 235, 0.35);
+    }
+
+    .button-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 26px rgba(37, 99, 235, 0.4);
+      background: #1e40af;
+    }
+
+    .button-secondary {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    .button-secondary:hover {
+      background: #d1d5db;
+    }
+
+    .hint {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .metric-row {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+
+    .metric-pill {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #eff6ff;
+      font-size: 11px;
+      color: #1d4ed8;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .metric-label {
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .metric-value {
+      font-family: "SF Mono", ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono",
+        "Courier New", monospace;
+      font-size: 12px;
+    }
+
+    .chart-wrapper {
+      margin-top: 6px;
+    }
+
+    .footer-note {
+      margin-top: 18px;
+      font-size: 11px;
+      color: var(--muted);
+      text-align: right;
+    }
+
+    .footer-note span {
+      font-weight: 600;
+      color: var(--primary);
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <div class="badge">
+        <span>Ion Drift API</span>
+        <span>·</span>
+        <span>Semantic Stability Preview</span>
+      </div>
+      <div class="title">LLM Drift &amp; Safe-Region Visualization</div>
+      <div class="subtitle">
+        This static demo illustrates how the Ion Drift API scores multi-turn
+        conversations for semantic drift, stability, and safe-region violations.
+        Charts below are powered by example data that mirrors a real embedding-based analysis.
+      </div>
+    </header>
+
+    <section class="layout">
+      <!-- Left: Conversation & controls -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Example Conversation</div>
+            <div class="card-subtitle">
+              Drift rises as the model moves off-task into unrelated or hallucinated content.
+            </div>
+          </div>
+        </div>
+
+        <textarea id="conversationBox" spellcheck="false">
+[1] We are analyzing drift and stability of a large language model over long conversations.
+[2] The goal is to detect how far semantic meaning moves away from the original intent.
+[3] In this message, I continue discussing multi-turn stability and drift measurement.
+[4] Now I slightly shift topics and mention robotics safe regions and control theory.
+[5] Suddenly I talk about pizza toppings and skateboard tricks for no reason.
+[6] My brain is now describing a purple elephant dancing on the moon with WiFi.</textarea>
+
+        <div class="actions">
+          <button id="simulateButton" class="button button-primary">
+            ▶ Simulate Drift
+          </button>
+          <button id="resetButton" class="button button-secondary">
+            ⟲ Reset View
+          </button>
+          <div class="hint">
+            This demo uses mocked drift output from the Ion Drift engine
+            to visualize safe-region stability.
+          </div>
+        </div>
+
+        <div class="metric-row" style="margin-top: 14px;">
+          <div class="metric-pill">
+            <span class="metric-label">Stability</span>
+            <span class="metric-value" id="stabilityValue">–</span>
+          </div>
+          <div class="metric-pill">
+            <span class="metric-label">PF Metric</span>
+            <span class="metric-value" id="pfValue">–</span>
+          </div>
+          <div class="metric-pill">
+            <span class="metric-label">Turns</span>
+            <span class="metric-value" id="turnsValue">–</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Charts -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Drift Trajectory &amp; Safe-Region Map</div>
+            <div class="card-subtitle">
+              Left: drift over time. Right: pairwise distance heatmap between conversation turns.
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-wrapper" style="height: 230px;">
+          <div id="driftCurve"></div>
+        </div>
+
+        <div class="chart-wrapper" style="height: 230px; margin-top: 10px;">
+          <div id="driftHeatmap"></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer-note">
+      Data shown here is representative example output from the
+      <span>Ion Drift</span> stability API — not live model calls.
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
