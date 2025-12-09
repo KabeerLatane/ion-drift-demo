@@ -3,11 +3,15 @@
 let mockData = null;
 
 async function loadMockData() {
-  const res = await fetch("mock_data.json");
-  mockData = await res.json();
-  // initialize metrics and charts once data is loaded
-  updateMetrics(mockData);
-  renderCharts(mockData);
+  try {
+    const res = await fetch("mock_data.json");
+    mockData = await res.json();
+    // initialize metrics and charts once data is loaded
+    updateMetrics(mockData);
+    renderCharts(mockData);
+  } catch (e) {
+    console.error("Failed to load mock_data.json", e);
+  }
 }
 
 function updateMetrics(data) {
@@ -32,7 +36,7 @@ function renderCharts(data) {
     mode: "lines+markers",
     line: { color: "#1d4ed8", width: 3 },
     marker: { size: 7 },
-    name: "Drift vs. Safe Region",
+    name: "Drift vs. Safe Region"
   };
 
   const driftLayout = {
@@ -41,14 +45,14 @@ function renderCharts(data) {
       title: "Turn",
       tickmode: "linear",
       dtick: 1,
-      zeroline: false,
+      zeroline: false
     },
     yaxis: {
       title: "Drift magnitude",
       zeroline: true,
-      zerolinecolor: "#e5e7eb",
+      zerolinecolor: "#e5e7eb"
     },
-    showlegend: false,
+    showlegend: false
   };
 
   Plotly.newPlot("driftCurve", [driftTrace], driftLayout, { displayModeBar: false });
@@ -57,12 +61,12 @@ function renderCharts(data) {
   const heatmapTrace = {
     z: data.heatmap,
     x,
-    y,
+    y: x,
     type: "heatmap",
     colorscale: "Blues",
     reversescale: true,
     showscale: true,
-    hoverongaps: false,
+    hoverongaps: false
   };
 
   const heatmapLayout = {
@@ -70,50 +74,19 @@ function renderCharts(data) {
     xaxis: {
       title: "Turn",
       tickmode: "linear",
-      dtick: 1,
+      dtick: 1
     },
     yaxis: {
       title: "Turn",
       autorange: "reversed",
       tickmode: "linear",
-      dtick: 1,
-    },
+      dtick: 1
+    }
   };
 
   Plotly.newPlot("driftHeatmap", [heatmapTrace], heatmapLayout, {
-    displayModeBar: false,
+    displayModeBar: false
   });
-}
-
-function animateDrift() {
-  if (!mockData) return;
-
-  const fullSeries = mockData.drift_series;
-  const turns = fullSeries.length;
-  const x = Array.from({ length: turns }, (_, i) => i + 1);
-
-  let current = [];
-  let step = 0;
-
-  const interval = setInterval(() => {
-    current.push(fullSeries[step]);
-    const partialData = {
-      ...mockData,
-      drift_series: current,
-      heatmap: mockData.heatmap.slice(0, step + 1).map(row => row.slice(0, step + 1)),
-    };
-
-    updateMetrics({
-      ...mockData,
-      drift_series: fullSeries.slice(0, step + 1),
-    });
-    renderCharts(partialData);
-
-    step += 1;
-    if (step >= turns) {
-      clearInterval(interval);
-    }
-  }, 260);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -123,7 +96,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const resetButton = document.getElementById("resetButton");
 
   simulateButton.addEventListener("click", () => {
-    animateDrift();
+    // For now: just re-render the same example data.
+    if (mockData) {
+      updateMetrics(mockData);
+      renderCharts(mockData);
+    }
   });
 
   resetButton.addEventListener("click", () => {
